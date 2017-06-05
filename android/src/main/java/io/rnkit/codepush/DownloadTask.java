@@ -17,11 +17,10 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -35,6 +34,7 @@ import okio.Okio;
  */
 class DownloadTask extends AsyncTask<DownloadTaskParams, Void, Void> {
     final int DOWNLOAD_CHUNK_SIZE = 4096;
+    private ArrayList<String> packageResults = new ArrayList<String>();
 
     Context context;
 
@@ -252,9 +252,16 @@ class DownloadTask extends AsyncTask<DownloadTaskParams, Void, Void> {
     private void copyFromResource(String assets, File output) throws IOException {
         ZipInputStream zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(context.getPackageResourcePath())));
         ZipEntry ze;
-        while ((ze = zis.getNextEntry()) != null) {
-            String fn = ze.getName();
-            if (fn.equals(assets)) {
+
+        // 如果为空, 那么则进行写入 by simman
+        if (packageResults.size() == 0) {
+            while ((ze = zis.getNextEntry()) != null) {
+                packageResults.add(ze.getName());
+            }
+        }
+
+        for (String name : packageResults) {
+            if (name.equals(assets)) {
                 if (UpdateContext.DEBUG) {
                     Log.d("RNUpdate", "Copying from resource " + assets + " to " + output);
                 }
@@ -273,6 +280,8 @@ class DownloadTask extends AsyncTask<DownloadTaskParams, Void, Void> {
 
         removeDirectory(param.unzipDirectory);
         param.unzipDirectory.mkdirs();
+
+        packageResults.clear();
 
         while ((ze = zis.getNextEntry()) != null)
         {
@@ -433,6 +442,7 @@ class DownloadTask extends AsyncTask<DownloadTaskParams, Void, Void> {
             if (UpdateContext.DEBUG) {
                 e.printStackTrace();
             }
+            packageResults.clear();
             params[0].listener.onDownloadFailed(e);
         }
         return null;

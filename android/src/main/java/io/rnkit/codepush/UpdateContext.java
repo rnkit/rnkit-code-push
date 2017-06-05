@@ -57,6 +57,8 @@ public class UpdateContext {
 
     public interface DownloadFileListener {
         void onDownloadCompleted();
+        void downloadProgress(String hashname, long received, long total);
+        void unzipProgress(String hashname, long received, long total);
         void onDownloadFailed(Throwable error);
     }
 
@@ -204,6 +206,16 @@ public class UpdateContext {
         params.listener = new DownloadFileListener() {
             @Override
             public void onDownloadCompleted() {
+            }
+
+            @Override
+            public void downloadProgress(String hashname, long received, long total) {
+
+            }
+
+            @Override
+            public void unzipProgress(String hashname, long received, long total) {
+
             }
 
             @Override

@@ -65,9 +65,9 @@ class DownloadTask extends AsyncTask<DownloadTaskParams, Void, Void> {
         }
     }
 
-    private void downloadFile(String url, File writePath) throws IOException {
+    private void downloadFile(DownloadTaskParams downloadTaskParams) throws IOException {
         OkHttpClient client = new OkHttpClient();
-        Request request = new Request.Builder().url(url)
+        Request request = new Request.Builder().url(downloadTaskParams.url)
                 .build();
         Response response = client.newCall(request).execute();
         if (response.code() > 299) {
@@ -77,14 +77,14 @@ class DownloadTask extends AsyncTask<DownloadTaskParams, Void, Void> {
         long contentLength = body.contentLength();
         BufferedSource source = body.source();
 
-        if (writePath.exists()) {
-            writePath.delete();
+        if (downloadTaskParams.zipFilePath.exists()) {
+            downloadTaskParams.zipFilePath.delete();
         }
 
-        BufferedSink sink = Okio.buffer(Okio.sink(writePath));
+        BufferedSink sink = Okio.buffer(Okio.sink(downloadTaskParams.zipFilePath));
 
         if (UpdateContext.DEBUG) {
-            Log.d("RNUpdate", "Downloading " + url);
+            Log.d("RNUpdate", "Downloading " + downloadTaskParams.url);
         }
 
         long bytesRead = 0;
@@ -93,6 +93,7 @@ class DownloadTask extends AsyncTask<DownloadTaskParams, Void, Void> {
             totalRead += bytesRead;
             if (UpdateContext.DEBUG) {
                 Log.d("RNUpdate", "Progress " + totalRead + "/" + contentLength);
+                downloadTaskParams.listener.downloadProgress(downloadTaskParams.hash, totalRead, contentLength);
             }
         }
         if (totalRead != contentLength) {
@@ -216,7 +217,10 @@ class DownloadTask extends AsyncTask<DownloadTaskParams, Void, Void> {
     }
 
     private void doDownload(DownloadTaskParams param) throws IOException {
-        downloadFile(param.url, param.zipFilePath);
+        downloadFile(param);
+
+        // TODO: 显示真实的 unzip 进度
+        param.listener.unzipProgress(param.hash, 100, 150);
 
         ZipInputStream zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(param.zipFilePath)));
         ZipEntry ze;
@@ -271,7 +275,10 @@ class DownloadTask extends AsyncTask<DownloadTaskParams, Void, Void> {
     }
 
     private void doPatchFromApk(DownloadTaskParams param) throws IOException, JSONException {
-        downloadFile(param.url, param.zipFilePath);
+        downloadFile(param);
+
+        // TODO: 显示真实的 unzip 进度
+        param.listener.unzipProgress(param.hash, 100, 150);
 
         ZipInputStream zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(param.zipFilePath)));
         ZipEntry ze;
@@ -337,7 +344,10 @@ class DownloadTask extends AsyncTask<DownloadTaskParams, Void, Void> {
     }
 
     private void doPatchFromPpk(DownloadTaskParams param) throws IOException, JSONException {
-        downloadFile(param.url, param.zipFilePath);
+        downloadFile(param);
+
+        // TODO: 显示真实的 unzip 进度
+        param.listener.unzipProgress(param.hash, 100, 150);
 
         ZipInputStream zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(param.zipFilePath)));
         ZipEntry ze;

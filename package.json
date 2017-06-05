@@ -3,7 +3,7 @@
   "description": "push code to your react native apps",
   "main": "lib/index.js",
   "author": "SimMan <liwei0990@gmail.com>",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "scripts": {
     "eslint": "eslint lib/",
     "test": "npm run eslint && npm run test-cov",

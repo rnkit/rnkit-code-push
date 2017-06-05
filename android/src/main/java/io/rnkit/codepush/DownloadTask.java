@@ -340,7 +340,7 @@ class DownloadTask extends AsyncTask<DownloadTaskParams, Void, Void> {
         if (UpdateContext.DEBUG) {
             Log.d("RNUpdate", "Unzip finished");
         }
-
+        packageResults.clear();
     }
 
     private void doPatchFromPpk(DownloadTaskParams param) throws IOException, JSONException {

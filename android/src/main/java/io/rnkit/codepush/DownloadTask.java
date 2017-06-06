@@ -34,7 +34,6 @@ import okio.Okio;
  */
 class DownloadTask extends AsyncTask<DownloadTaskParams, Void, Void> {
     final int DOWNLOAD_CHUNK_SIZE = 4096;
-    private ArrayList<String> packageResults = new ArrayList<String>();
 
     Context context;
 
@@ -253,32 +252,46 @@ class DownloadTask extends AsyncTask<DownloadTaskParams, Void, Void> {
         }
     }
 
-    private void copyFromResource(String assets, File output) throws IOException {
+    // 重写 copyFromResource, 解决 #1 https://github.com/rnkit/rnkit-code-push/issues/1
+    private void copyFromResource(String json, DownloadTaskParams param) throws IOException, JSONException {
+        JSONObject obj = (JSONObject)new JSONTokener(json).nextValue();
+        JSONObject copies = obj.getJSONObject("copies");
+        Iterator<?> keys = copies.keys();
+
         ZipInputStream zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(context.getPackageResourcePath())));
         ZipEntry ze;
 
-        // 如果为空, 那么则进行写入 by simman
-        if (packageResults.size() == 0) {
-            while ((ze = zis.getNextEntry()) != null) {
-                packageResults.add(ze.getName());
+        ArrayList<String> diffJsonKeys = new ArrayList<String>();
+        ArrayList<String> diffJsonValue = new ArrayList<String>();
+
+        while ( keys.hasNext() ) {
+            String to = (String)keys.next();
+            String from = copies.getString(to);
+            if (from.isEmpty()) {
+                from = to;
             }
+            diffJsonKeys.add(to);
+            diffJsonValue.add(from);
         }
 
-        for (String name : packageResults) {
-            if (name.equals(assets)) {
+        int count = 1;
+        while ((ze = zis.getNextEntry()) != null) {
+            String fn = ze.getName();
+            int valueIndex;
+            if ((valueIndex = diffJsonValue.indexOf(fn)) >= 0) {
+                String to = diffJsonKeys.get(valueIndex);
+                File output = new File(param.unzipDirectory, to);
                 if (UpdateContext.DEBUG) {
-                    Log.d("RNUpdate", "Copying from resource " + assets + " to " + output);
+                    Log.d("RNUpdate", "Copying from resource " + fn + " to " + output);
                 }
                 unzipToFile(zis, output);
+                param.listener.unzipProgress(param.hash, count ++, diffJsonKeys.size());
             }
         }
     }
 
     private void doPatchFromApk(DownloadTaskParams param) throws IOException, JSONException {
         downloadFile(param);
-
-        // TODO: 显示真实的 unzip 进度
-        param.listener.unzipProgress(param.hash, 100, 150);
 
         ZipInputStream zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(param.zipFilePath)));
         ZipEntry ze;
@@ -288,8 +301,6 @@ class DownloadTask extends AsyncTask<DownloadTaskParams, Void, Void> {
         removeDirectory(param.unzipDirectory);
         param.unzipDirectory.mkdirs();
 
-        packageResults.clear();
-
         while ((ze = zis.getNextEntry()) != null)
         {
             String fn = ze.getName();
@@ -298,18 +309,7 @@ class DownloadTask extends AsyncTask<DownloadTaskParams, Void, Void> {
                 // copy files from assets
                 byte[] bytes = readBytes(zis);
                 String json = new String(bytes, "UTF-8");
-                JSONObject obj = (JSONObject)new JSONTokener(json).nextValue();
-
-                JSONObject copies = obj.getJSONObject("copies");
-                Iterator<?> keys = copies.keys();
-                while( keys.hasNext() ) {
-                    String to = (String)keys.next();
-                    String from = copies.getString(to);
-                    if (from.isEmpty()) {
-                        from = to;
-                    }
-                    copyFromResource(from, new File(param.unzipDirectory, to));
-                }
+                copyFromResource(json, param);
                 continue;
             }
             if (fn.equals("index.bundlejs.patch")) {
@@ -340,7 +340,7 @@ class DownloadTask extends AsyncTask<DownloadTaskParams, Void, Void> {
         if (UpdateContext.DEBUG) {
             Log.d("RNUpdate", "Unzip finished");
         }
-        packageResults.clear();
+        param.listener.unzipProgress(param.hash, 1, 1);
     }
 
     private void doPatchFromPpk(DownloadTaskParams param) throws IOException, JSONException {
@@ -452,7 +452,6 @@ class DownloadTask extends AsyncTask<DownloadTaskParams, Void, Void> {
             if (UpdateContext.DEBUG) {
                 e.printStackTrace();
             }
-            packageResults.clear();
             params[0].listener.onDownloadFailed(e);
         }
         return null;

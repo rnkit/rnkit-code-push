@@ -32,4 +32,9 @@
 - (void)removeFile:(NSString *)filePath
  completionHandler:(void (^)(NSError *error))completionHandler;
 
++ (NSString *)downloadDir;
++ (NSString *)cacheDir;
++ (NSURL *)binaryBundleURL;
++ (NSString *)packageVersion;
++ (NSString *) zipDownloadDirFiles;
 @end

@@ -66,7 +66,6 @@
         [SSZipArchive unzipFileAtPath:path toDestination:destination progressHandler:^(NSString *entry, unz_file_info zipInfo, long entryNumber, long total) {
             progressHandler(entry, entryNumber, total);
         } completionHandler:^(NSString *path, BOOL succeeded, NSError *error) {
-            // 解压完，移除zip文件
             [[NSFileManager defaultManager] removeItemAtPath:path error:nil];
             if (completionHandler) {
                 completionHandler(path, succeeded, error);
@@ -125,7 +124,8 @@ completionHandler:(void (^)(NSError *error))completionHandler
             }
             NSError *error = nil;
             [fm copyItemAtPath:fromPath toPath:toPath error:&error];
-            if (error) {
+            BOOL isReadable = [fm isReadableFileAtPath:toPath];
+            if (error || !isReadable) {
                 if (completionHandler) {
                     completionHandler(error);
                 }
@@ -189,5 +189,53 @@ completionHandler:(void (^)(NSError *error))completionHandler
         }
     }
 }
+
++ (NSString *)zipDownloadDirFiles
+{
+    [[RNKitCodePushManager new] createDir:[RNKitCodePushManager cacheDir]];
+    
+    
+    NSString *zipFilePath = [[RNKitCodePushManager cacheDir] stringByAppendingPathComponent:[NSString stringWithFormat:@"debug-%0ld.zip", time(NULL)]];
+    BOOL success = [SSZipArchive createZipFileAtPath:zipFilePath withContentsOfDirectory:[RNKitCodePushManager downloadDir] keepParentDirectory:YES];
+    if (success) {
+        return [RNKitCodePushManager downloadDir];
+    }
+    return nil;
+}
+
++ (NSString *)cacheDir
+{
+    NSString *directory = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) firstObject];
+    NSString *cacheDir = [directory stringByAppendingPathComponent:@"rnkitcodepush"];
+    
+    return cacheDir;
+}
+
++ (NSString *)downloadDir
+{
+    NSString *directory = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) firstObject];
+    NSString *downloadDir = [directory stringByAppendingPathComponent:@"rnkitcodepush"];
+    
+    return downloadDir;
+}
+
++ (NSURL *)binaryBundleURL
+{
+    NSURL *url = [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
+    return url;
+}
+
++ (NSString *)packageVersion
+{
+    static NSString *version = nil;
+    
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        NSDictionary *infoDictionary = [[NSBundle mainBundle] infoDictionary];
+        version = [infoDictionary objectForKey:@"CFBundleShortVersionString"];
+    });
+    return version;
+}
+
 
 @end

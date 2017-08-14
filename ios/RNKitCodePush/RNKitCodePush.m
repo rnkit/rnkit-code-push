@@ -7,9 +7,10 @@
 //
 
 #import "RNKitCodePush.h"
-#import "RNKitCodePushDownloader.h"
+#import "RNkitSessionManager.h"
 #import "RNKitCodePushManager.h"
 #import "RNKitCodePushDeviceInfo.h"
+#import "RNKitCodePushConst.h"
 
 #if __has_include(<React/RCTBridge.h>)
 #import "React/RCTEventDispatcher.h"
@@ -20,38 +21,6 @@
 #import "RCTConvert.h"
 #import "RCTLog.h"
 #endif
-
-//
-static NSString *const keyUpdateInfo = @"RNKIT_CODE_PUSH_INFO_KEY";
-static NSString *const paramPackageVersion = @"packageVersion";
-static NSString *const paramLastVersion = @"lastVersion";
-static NSString *const paramCurrentVersion = @"currentVersion";
-static NSString *const paramIsFirstTime = @"isFirstTime";
-static NSString *const paramIsFirstLoadOk = @"isFirstLoadOK";
-static NSString *const keyFirstLoadMarked = @"RNKIT_CODE_PUSH_FIRSTLOADMARKED_KEY";
-static NSString *const keyRolledBackMarked = @"RNKIT_CODE_PUSH_ROLLEDBACKMARKED_KEY";
-static NSString *const KeyPackageUpdatedMarked = @"RNKIT_CODE_PUSH_ISPACKAGEUPDATEDMARKED_KEY";
-
-// app info
-static NSString * const AppVersionKey = @"appVersion";
-static NSString * const BuildVersionKey = @"buildVersion";
-
-// file def
-static NSString * const BUNDLE_FILE_NAME = @"index.bundlejs";
-static NSString * const SOURCE_PATCH_NAME = @"__diff.json";
-static NSString * const BUNDLE_PATCH_NAME = @"index.bundlejs.patch";
-
-// error def
-static NSString * const ERROR_OPTIONS = @"options error";
-static NSString * const ERROR_BSDIFF = @"bsdiff error";
-static NSString * const ERROR_FILE_OPERATION = @"file operation error";
-
-// event def
-static NSString * const EVENT_PROGRESS_DOWNLOAD = @"RNKitCodePushDownloadProgress";
-static NSString * const EVENT_PROGRESS_UNZIP = @"RNKitCodePushUnzipProgress";
-static NSString * const PARAM_PROGRESS_HASHNAME = @"hashname";
-static NSString * const PARAM_PROGRESS_RECEIVED = @"received";
-static NSString * const PARAM_PROGRESS_TOTAL = @"total";
 
 
 typedef NS_ENUM(NSInteger, HotUpdateType) {
@@ -75,7 +44,7 @@ RCT_EXPORT_MODULE(RNKitCodePush);
     
     NSDictionary *updateInfo = [defaults dictionaryForKey:keyUpdateInfo];
     if (updateInfo) {
-        NSString *curPackageVersion = [RNKitCodePush packageVersion];
+        NSString *curPackageVersion = [RNKitCodePushManager packageVersion];
         NSString *packageVersion = [updateInfo objectForKey:paramPackageVersion];
         
         BOOL needClearUpdateInfo = ![curPackageVersion isEqualToString:packageVersion];
@@ -122,7 +91,7 @@ RCT_EXPORT_MODULE(RNKitCodePush);
             }
             
             if (loadVersioin.length) {
-                NSString *downloadDir = [RNKitCodePush downloadDir];
+                NSString *downloadDir = [RNKitCodePushManager downloadDir];
                 
                 NSString *bundlePath = [[downloadDir stringByAppendingPathComponent:loadVersioin] stringByAppendingPathComponent:BUNDLE_FILE_NAME];
                 if ([[NSFileManager defaultManager] fileExistsAtPath:bundlePath isDirectory:NULL]) {
@@ -133,7 +102,7 @@ RCT_EXPORT_MODULE(RNKitCodePush);
         }
     }
     
-    return [RNKitCodePush binaryBundleURL];
+    return [RNKitCodePushManager binaryBundleURL];
 }
 
 - (NSDictionary *)constantsToExport
@@ -141,8 +110,8 @@ RCT_EXPORT_MODULE(RNKitCodePush);
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     
     NSMutableDictionary *ret = [NSMutableDictionary new];
-    ret[@"downloadRootDir"] = [RNKitCodePush downloadDir];
-    ret[@"packageVersion"] = [RNKitCodePush packageVersion];
+    ret[@"downloadRootDir"] = [RNKitCodePushManager downloadDir];
+    ret[@"packageVersion"] = [RNKitCodePushManager packageVersion];
     ret[@"isRolledBack"] = [defaults objectForKey:keyRolledBackMarked];
     ret[@"isFirstTime"] = [defaults objectForKey:keyFirstLoadMarked];
     NSDictionary *updateInfo = [defaults dictionaryForKey:keyUpdateInfo];
@@ -238,7 +207,7 @@ RCT_EXPORT_METHOD(setNeedUpdate:(NSDictionary *)options)
         newInfo[paramLastVersion] = lastVersion;
         newInfo[paramIsFirstTime] = @(YES);
         newInfo[paramIsFirstLoadOk] = @(NO);
-        newInfo[paramPackageVersion] = [RNKitCodePush packageVersion];
+        newInfo[paramPackageVersion] = [RNKitCodePushManager packageVersion];
         [defaults setObject:newInfo forKey:keyUpdateInfo];
         
         [defaults synchronize];
@@ -288,7 +257,7 @@ RCT_EXPORT_METHOD(markSuccess)
         return;
     }
     
-    NSString *dir = [RNKitCodePush downloadDir];
+    NSString *dir = [RNKitCodePushManager downloadDir];
     BOOL success = [_fileManager createDir:dir];
     if (!success) {
         callback([self errorWithMessage:ERROR_FILE_OPERATION]);
@@ -299,7 +268,7 @@ RCT_EXPORT_METHOD(markSuccess)
     NSString *unzipDir = [dir stringByAppendingPathComponent:hashName];
 
     RCTLogInfo(@"RNUpdate -- download file %@", updateUrl);
-    [RNKitCodePushDownloader download:updateUrl savePath:zipFilePath progressHandler:^(long long receivedBytes, long long totalBytes) {
+    [RNkitSessionManager download:updateUrl savePath:zipFilePath progressHandler:^(long long receivedBytes, long long totalBytes) {
         [self.bridge.eventDispatcher sendAppEventWithName:EVENT_PROGRESS_DOWNLOAD
                                                      body:@{
                                                             PARAM_PROGRESS_HASHNAME:hashName,
@@ -331,7 +300,7 @@ RCT_EXPORT_METHOD(markSuccess)
                             case HotUpdateTypePatchFromPackage:
                             {
                                 NSString *sourceOrigin = [[NSBundle mainBundle] resourcePath];
-                                NSString *bundleOrigin = [[RNKitCodePush binaryBundleURL] path];
+                                NSString *bundleOrigin = [[RNKitCodePushManager binaryBundleURL] path];
                                 [self patch:hashName fromBundle:bundleOrigin source:sourceOrigin callback:callback];
                             }
                                 break;
@@ -357,7 +326,7 @@ RCT_EXPORT_METHOD(markSuccess)
 
 - (void)patch:(NSString *)hashName fromBundle:(NSString *)bundleOrigin source:(NSString *)sourceOrigin callback:(void (^)(NSError *error))callback
 {
-    NSString *unzipDir = [[RNKitCodePush downloadDir] stringByAppendingPathComponent:hashName];
+    NSString *unzipDir = [[RNKitCodePushManager downloadDir] stringByAppendingPathComponent:hashName];
     NSString *sourcePatch = [unzipDir stringByAppendingPathComponent:SOURCE_PATCH_NAME];
     NSString *bundlePatch = [unzipDir stringByAppendingPathComponent:BUNDLE_PATCH_NAME];
     
@@ -396,7 +365,7 @@ RCT_EXPORT_METHOD(markSuccess)
     NSDictionary *updateInfo = [defaults objectForKey:keyUpdateInfo];
     NSString *curVersion = [updateInfo objectForKey:paramCurrentVersion];
     
-    NSString *downloadDir = [RNKitCodePush downloadDir];
+    NSString *downloadDir = [RNKitCodePushManager downloadDir];
     NSError *error = nil;
     NSArray *list = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:downloadDir error:&error];
     if (error) {
@@ -429,32 +398,6 @@ RCT_EXPORT_METHOD(markSuccess)
     return [NSError errorWithDomain:@"io.rnkit.codepush"
                                code:-1
                            userInfo:@{ NSLocalizedDescriptionKey: errorMessage}];
-}
-
-+ (NSString *)downloadDir
-{
-    NSString *directory = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) firstObject];
-    NSString *downloadDir = [directory stringByAppendingPathComponent:@"rnkitcodepush"];
-    
-    return downloadDir;
-}
-
-+ (NSURL *)binaryBundleURL
-{
-    NSURL *url = [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
-    return url;
-}
-
-+ (NSString *)packageVersion
-{
-    static NSString *version = nil;
-
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        NSDictionary *infoDictionary = [[NSBundle mainBundle] infoDictionary];
-        version = [infoDictionary objectForKey:@"CFBundleShortVersionString"];
-    });
-    return version;
 }
 
 @end

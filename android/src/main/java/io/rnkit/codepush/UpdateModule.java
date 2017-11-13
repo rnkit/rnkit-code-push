@@ -15,7 +15,8 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.cxxbridge.JSBundleLoader;
+// import com.facebook.react.cxxbridge.JSBundleLoader; // RN < 0.46
+import com.facebook.react.bridge.JSBundleLoader; // RN >= 0.46
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import java.lang.reflect.Field;

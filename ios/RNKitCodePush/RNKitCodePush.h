@@ -16,4 +16,8 @@
 
 + (NSURL *)bundleURL;
 
++ (BOOL)hasUpdateInfo;
+
++ (NSString *)downloadDir;
+
 @end

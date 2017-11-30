@@ -136,6 +136,10 @@ RCT_EXPORT_MODULE(RNKitCodePush);
     return [RNKitCodePush binaryBundleURL];
 }
 
++ (BOOL)hasUpdateInfo {
+    return [[NSUserDefaults standardUserDefaults] dictionaryForKey:keyUpdateInfo] ? YES : NO;
+}
+
 - (NSDictionary *)constantsToExport
 {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];

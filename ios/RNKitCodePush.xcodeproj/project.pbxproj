@@ -27,6 +27,8 @@
 		9F394D881C7C25DC00C794C0 /* unzip.c in Sources */ = {isa = PBXBuildFile; fileRef = 9F394D761C7C25DC00C794C0 /* unzip.c */; };
 		9F394D891C7C25DC00C794C0 /* zip.c in Sources */ = {isa = PBXBuildFile; fileRef = 9F394D781C7C25DC00C794C0 /* zip.c */; };
 		9F394D8A1C7C25DC00C794C0 /* SSZipArchive.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F394D7B1C7C25DC00C794C0 /* SSZipArchive.m */; };
+		E1162A861FCFE99D005B2A29 /* RNKitMissingImageFixToolBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = E1162A841FCFE99D005B2A29 /* RNKitMissingImageFixToolBridge.m */; };
+		E1162A871FCFE99D005B2A29 /* RCTConvert+rnkit_missingImage.m in Sources */ = {isa = PBXBuildFile; fileRef = E1162A851FCFE99D005B2A29 /* RCTConvert+rnkit_missingImage.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -90,6 +92,10 @@
 		9F394D7A1C7C25DC00C794C0 /* SSZipArchive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSZipArchive.h; sourceTree = "<group>"; };
 		9F394D7B1C7C25DC00C794C0 /* SSZipArchive.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSZipArchive.m; sourceTree = "<group>"; };
 		9F394D7C1C7C25DC00C794C0 /* ZipArchive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZipArchive.h; sourceTree = "<group>"; };
+		E1162A821FCFE99D005B2A29 /* RCTConvert+rnkit_missingImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "RCTConvert+rnkit_missingImage.h"; sourceTree = "<group>"; };
+		E1162A831FCFE99D005B2A29 /* RNKitMissingImageFixToolBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNKitMissingImageFixToolBridge.h; sourceTree = "<group>"; };
+		E1162A841FCFE99D005B2A29 /* RNKitMissingImageFixToolBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNKitMissingImageFixToolBridge.m; sourceTree = "<group>"; };
+		E1162A851FCFE99D005B2A29 /* RCTConvert+rnkit_missingImage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "RCTConvert+rnkit_missingImage.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -122,6 +128,7 @@
 		91C5F0011C76ECA90037E727 /* RNKitCodePush */ = {
 			isa = PBXGroup;
 			children = (
+				E1162A811FCFE99D005B2A29 /* MissingImageFixTool */,
 				9F1BCB381CAF6B3E000EF2CB /* BSDiff */,
 				9F394D571C7C25DC00C794C0 /* SSZipArchive */,
 				3F50BE3A1E812F8E003A6F64 /* RNKitCodePush.h */,
@@ -213,6 +220,17 @@
 			path = minizip;
 			sourceTree = "<group>";
 		};
+		E1162A811FCFE99D005B2A29 /* MissingImageFixTool */ = {
+			isa = PBXGroup;
+			children = (
+				E1162A821FCFE99D005B2A29 /* RCTConvert+rnkit_missingImage.h */,
+				E1162A851FCFE99D005B2A29 /* RCTConvert+rnkit_missingImage.m */,
+				E1162A831FCFE99D005B2A29 /* RNKitMissingImageFixToolBridge.h */,
+				E1162A841FCFE99D005B2A29 /* RNKitMissingImageFixToolBridge.m */,
+			);
+			path = MissingImageFixTool;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -273,6 +291,7 @@
 				9F394D811C7C25DC00C794C0 /* fileenc.c in Sources */,
 				9F394D871C7C25DC00C794C0 /* mztools.c in Sources */,
 				9F394D821C7C25DC00C794C0 /* hmac.c in Sources */,
+				E1162A861FCFE99D005B2A29 /* RNKitMissingImageFixToolBridge.m in Sources */,
 				9F394D881C7C25DC00C794C0 /* unzip.c in Sources */,
 				9F1BCB4F1CAF6B68000EF2CB /* BSDiff.m in Sources */,
 				3F50BE401E812F8E003A6F64 /* RNKitCodePush.m in Sources */,
@@ -283,6 +302,7 @@
 				9F394D801C7C25DC00C794C0 /* entropy.c in Sources */,
 				9F394D831C7C25DC00C794C0 /* prng.c in Sources */,
 				9F394D861C7C25DC00C794C0 /* ioapi.c in Sources */,
+				E1162A871FCFE99D005B2A29 /* RCTConvert+rnkit_missingImage.m in Sources */,
 				9F1BCB461CAF6B3E000EF2CB /* bspatch.c in Sources */,
 				9F394D8A1C7C25DC00C794C0 /* SSZipArchive.m in Sources */,
 				9F394D891C7C25DC00C794C0 /* zip.c in Sources */,
